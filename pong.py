@@ -1,11 +1,7 @@
 from turtle import Turtle
-import random
 
-NORTH_EAST = 45
-NORTH_WEST = 135
-SOUTH_EAST = 315
-SOUTH_WEST = 225
-HEADING_LIST = [NORTH_WEST, NORTH_EAST, SOUTH_EAST, SOUTH_WEST]
+TIME_SPEED = 0.05
+SPEED_UP_VALUE = 0.9
 
 
 class Pong(Turtle):
@@ -14,27 +10,32 @@ class Pong(Turtle):
         super().__init__()
         self.shape("circle")
         self.color("white")
-
-    def move_pong(self):
-        self.forward(20)
-
-    def refresh(self):
         self.penup()
+        self.y_value = 5
+        self.x_value = 5
+        self.time_speed = TIME_SPEED
+
+    def move(self):
+        """increment the current value of xcor and ycor."""
+        new_x = self.xcor() + self.x_value
+        new_y = self.ycor() + self.y_value
+        self.goto(new_x, new_y)
+
+    def y_bounce(self):
+        """return negative or positive value of the y"""
+        self.y_value *= -1
+
+    def x_bounce(self):
+        """return negative or positive value of the x. speed up pong on every hit of the paddle."""
+        self.x_value *= -1
+        self.speed_up()
+
+    def reset_pos(self):
+        """reset the pong to home position and reset its speed. go to opposite direction where it's missed."""
         self.home()
-        self.setheading(random.choice(HEADING_LIST))
+        self.x_value *= -1
+        self.time_speed = TIME_SPEED
 
-    def wall_hit_change_heading(self):
-        bounce_heading = (self.heading() - 360) * -1    # prevent negative value.
-        self.setheading(bounce_heading)
-
-    def p1_hit_change_heading(self):
-        if self.heading() == NORTH_WEST:
-            self.setheading(NORTH_EAST)
-        elif self.heading() == SOUTH_WEST:
-            self.setheading(SOUTH_EAST)
-
-    def p2_hit_change_heading(self):
-        if self.heading() == SOUTH_EAST:
-            self.setheading(SOUTH_WEST)
-        elif self.heading() == NORTH_EAST:
-            self.setheading(NORTH_WEST)
+    def speed_up(self):
+        """return the reduced value of refresh rate."""
+        self.time_speed *= SPEED_UP_VALUE

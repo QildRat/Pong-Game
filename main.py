@@ -1,97 +1,59 @@
-from turtle import Screen, Turtle
-import player_one
+from turtle import Screen
+from paddle import Paddle
+from pong import Pong
 import time
-import pong
-import player_two
-import scoreboard
+from scoreboard import Scoreboard
 
-
-def middle_line():
-    """create a broken line in the middle."""
-    turtle.hideturtle()
-    turtle.color("white")
-    turtle.teleport(x=0, y=300)
-
-    while turtle.ycor() != -300:
-        turtle.setheading(270)
-        turtle.forward(10)
-        turtle.penup()
-        turtle.forward(10)
-        turtle.pendown()
-
-
-# CODE HERE ----------------------------------------------------
-turtle = Turtle()
+# TODO create screen with 800 x 600.
 screen = Screen()
-
-screen_x = 800
-screen_y = 600
+screen.setup(width=800, height=600)
 screen.bgcolor("black")
-screen.setup(width=screen_x, height=screen_y)
-screen.listen()
-screen.tracer(0)    # screen animation off. on=1
+screen.tracer(0)  # turn off animation. !must have screen update method after!
 
-# TODO create middle broken line.
-middle_line()
+# TODO create a left and right paddle. what is the inconsistent value of the paddle?
+#  answer: x and y position. make it as a parameter.
+left_paddle = Paddle(-380, 0)
+right_paddle = Paddle(370, 0)
 
-# TODO create and move a paddle.
-player1 = player_one.Paddle()
-player2 = player_two.Paddle2()
-score = scoreboard.Scoreboard()
+# TODO create a Pong ball and make it move.
+pong = Pong()
 
-# TODO create a Pong ball.
-pong = pong.Pong()
+# TODO create scoreboard.
+score = Scoreboard()
 
-# TODO key bindings.
-screen.onkeyrelease(key="W", fun=player1.up)
-screen.onkeyrelease(key="w", fun=player1.up)
-screen.onkeyrelease(key="S", fun=player1.down)
-screen.onkeyrelease(key="s", fun=player1.down)
-screen.onkeyrelease(key="Up", fun=player2.up)
-screen.onkeyrelease(key="Down", fun=player2.down)
+# TODO move the paddles.
+screen.listen()  # allow to bind function into keys.
+screen.onkey(fun=left_paddle.move_up, key="w")
+screen.onkey(fun=left_paddle.move_down, key="s")
+screen.onkey(fun=left_paddle.move_up, key="W")
+screen.onkey(fun=left_paddle.move_down, key="S")
+screen.onkey(fun=right_paddle.move_up, key="Up")
+screen.onkey(fun=right_paddle.move_down, key="Down")
 
+is_game_on = True
+while is_game_on:
+    screen.update()
+    time.sleep(pong.time_speed)
+    pong.move()
 
-def start_game():
+    # TODO detect collision with wall and bounce.
+    if pong.ycor() >= 290 or pong.ycor() <= -280:
+        pong.y_bounce()
 
-    # TODO set Pong random heading.
-    pong.refresh()
+    # TODO detect collision with paddle and bounce.
+    if (pong.xcor() == -360 and pong.distance(left_paddle) < 60 or pong.xcor() == 350 and pong.distance(right_paddle) <
+            60):
+        pong.x_bounce()
 
-    is_game_on = True
-    while is_game_on:
-        pong.move_pong()
-        screen.update()
-        time.sleep(0.03)
+    # TODO detect if paddles missed the pong.
+    if pong.xcor() > 370:
+        score.right_add_point()
+        pong.reset_pos()
 
-        # TODO detect collision with wall and bounce.
-        if pong.ycor() > 280 or pong.ycor() < -280:
-            pong.wall_hit_change_heading()
+    if pong.xcor() < -380:
+        score.left_add_point()
+        pong.reset_pos()
 
-        # TODO detect collision with paddle.
-        # used loop comprehension.
-        [(pong.p1_hit_change_heading()) for paddle in player1.segment_list if paddle.distance(pong) < 20]
-        [(pong.p2_hit_change_heading()) for paddle in player2.segment_list if paddle.distance(pong) < 20]
-
-        # TODO detect when paddle missed the pong and hit the left or right edge.
-        if pong.xcor() > 390:
-            is_game_on = False
-            score.player1_score += 1
-
-        elif pong.xcor() < -390:
-            is_game_on = False
-            score.player2_score += 1
-
-    pong.refresh()
     score.update_score()
-
-
-# -------------------------------------------------------------------------------
-
-is_game_over = False
-while not is_game_over:
-    start_game()
-
-    if score.player1_score >= 10 or score.player2_score >= 10:
-        is_game_over = True
-        score.game_over()
 
 screen.exitonclick()
